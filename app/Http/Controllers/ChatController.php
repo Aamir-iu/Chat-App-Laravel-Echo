@@ -39,6 +39,18 @@ class ChatController extends Controller
         return ChatResource::collection($session->chats->where('user_id', auth()->id()));
     }
 
+    //read session iff message is read
+
+     public function read(Session $session)
+    {
+        $chats = $session->chats->where('read_at', null)->where('type', 0)->where('user_id', '!=', auth()->id());
+        foreach ($chats as $chat) {
+            $chat->update(['read_at' => Carbon::now()]);
+            broadcast(new MsgReadEvent(new ChatResource($chat), $chat->session_id));
+        }
+    }
+
+
    
     /**
      * Delete all chat.
